@@ -1,0 +1,42 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: cs-cart-ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Russian\n"
+"Language: ru_RU\n"
+"Plural-Forms: nplurals=4; plural=((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3));\n"
+"X-Generator: crowdin.com\n"
+"X-Crowdin-Project: cs-cart-ru\n"
+"X-Crowdin-Language: ru\n"
+"X-Crowdin-File: /release-4.9.3/addons/wooppay.po\n"
+"Last-Translator: cscart <translations@cs-cart.com>\n"
+"PO-Revision-Date: 2019-01-29 13:01\n"
+
+msgctxt "Addons::name::wooppay"
+msgid "Wooppay payment gateway"
+msgstr "Платёжная система Wooppay"
+
+msgctxt "Addons::description::wooppay"
+msgid "Make payment using Wooppay"
+msgstr "Совершайте оплату с помощью Wooppay"
+
+msgctxt "Languages::addons.wooppay.url"
+msgid "API URL"
+msgstr "API URL"
+
+msgctxt "Languages::addons.wooppay.login"
+msgid "Login"
+msgstr "Логин API"
+
+msgctxt "Languages::addons.wooppay.password"
+msgid "Password"
+msgstr "Пароль API"
+
+msgctxt "Languages::addons.wooppay.prefix"
+msgid "Prefix"
+msgstr "Префикс для ваших заказов"
+
+msgctxt "Languages::addons.wooppay.service"
+msgid "Service"
+msgstr "Имя вашего сервиса в системе платежей Wooppay"
+
