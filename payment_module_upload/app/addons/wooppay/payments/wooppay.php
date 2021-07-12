@@ -33,58 +33,42 @@ if (defined('PAYMENT_NOTIFICATION')) {
 		fn_order_placement_routines('route', $order_id, false);
 	}
 	if ($mode == 'approve') {
-		try {
-			$client = new WooppaySoapClient($processor_data['processor_params']['url']);
-		} catch (WooppaySoapException $e) {
-		}
-		$login_request = new CoreLoginRequest();
-		$login_request->username = $processor_data['processor_params']['login'];
-		$login_request->password = $processor_data['processor_params']['password'];
-		try {
-			if ($client->login($login_request)) {
-				$invoice_request = new CashCreateInvoiceByServiceRequest();
-				$invoice_request->referenceId = $processor_data['processor_params']['prefix'] . $order_id;
-				$invoice_request->backUrl = '';
-				$invoice_request->serviceName = '';
-				$invoice_request->requestUrl = '';
-				$invoice_request->addInfo = '';
-				$invoice_request->amount = null;
-				$invoice_request->deathDate = '';
-				$invoice_request->description = '';
-				$invoice_request->serviceType = 4;
-				$invoice_data = $client->createInvoice($invoice_request);
-				$wooppay_operation_id = $invoice_data->response->operationId;
-				$operationdata_request = new CashGetOperationDataRequest();
-				$operationdata_request->operationId = array($wooppay_operation_id);
-				$operation_data = $client->getOperationData($operationdata_request);
-				if (empty($order_info['payment_info']['order_status']) || $order_info['payment_info']['order_status'] == 'I'){
-					$pp_response = array(
-						'order_status' => 'O'
-					);
-					fn_finish_payment($order_id, $pp_response);
-				}
-				else {
-					if ($operation_data->response->records[0]->status == WooppayOperationStatus::OPERATION_STATUS_DONE) {
-						$pp_response = array(
-							'order_status' => 'P'
-						);
-					}
-					else {
-						$pp_response = array(
-							'order_status' => 'I'
-						);
-					}
-					fn_update_order_payment_info($order_id, $pp_response);
-					header('Content-type: application/json');
-					echo '{"data:1"}';
-					exit;
-				}
+		if (md5($order_id) == $_REQUEST['key']) {
+			try {
+				$client = new WooppaySoapClient($processor_data['processor_params']['url']);
+			} catch (WooppaySoapException $e) {
 			}
-		}catch (Exception $exception){
+			$login_request = new CoreLoginRequest();
+			$login_request->username = $processor_data['processor_params']['login'];
+			$login_request->password = $processor_data['processor_params']['password'];
+			try {
+				if ($client->login($login_request)) {
+					$operation_id = db_query("SELECT `wooppay_transaction_id` FROM `wooppay_order_transaction` `pt`  WHERE `pt`.`order_id` = '" . $order_id . "' LIMIT 1");
+					$operation_id = mysqli_fetch_row($operation_id);
+					if ($operation_id) {
+						$operationdata_request = new CashGetOperationDataRequest();
+						$operationdata_request->operationId = array($operation_id[0]);
+						$operation_data = $client->getOperationData($operationdata_request);
+						if ($operation_data->response->records[0]->status == WooppayOperationStatus::OPERATION_STATUS_DONE) {
+							$pp_response = array(
+								'order_status' => 'P'
+							);
+						} else {
+							$pp_response = array(
+								'order_status' => 'I'
+							);
+						}
+						fn_update_order_payment_info($order_id, $pp_response);
+						fn_change_order_status($order_id, $pp_response['order_status'], $status_from = '', $force_notification = array(), $place_order = false);
+						header('Content-type: application/json');
+						die('{"data:1"}');
+					}
+				}
+			} catch (Exception $exception) {
+			}
 		}
 	}
-}
-else {
+} else {
 	try {
 		$client = new WooppaySoapClient($processor_data['processor_params']['url']);
 	} catch (WooppaySoapException $e) {
@@ -92,21 +76,28 @@ else {
 	$login_request = new CoreLoginRequest();
 	$login_request->username = $processor_data['processor_params']['login'];
 	$login_request->password = $processor_data['processor_params']['password'];
-	if ($client->login($login_request)){
+	if ($client->login($login_request)) {
 		$invoice_request = new CashCreateInvoiceByServiceRequest();
 		$invoice_request->referenceId = $processor_data['processor_params']['prefix'] . $order_id;
 		$invoice_request->serviceName = $processor_data['processor_params']['service'];
-		$invoice_request->backUrl = fn_url("payment_notification.return?payment=wooppay&order_id=$order_id", AREA, 'current');
-		$invoice_request->requestUrl = fn_url("payment_notification.approve?payment=wooppay&order_id=$order_id", AREA, 'current');;
+		$invoice_request->backUrl = fn_url("payment_notification.return?payment=wooppay&order_id=$order_id", AREA,
+			'current');
+		$invoice_request->requestUrl = fn_url("payment_notification.approve?payment=wooppay&order_id=$order_id&key=" . md5($order_id) . "",
+			AREA, 'current');;
 		$invoice_request->addInfo = 'Payment for Order ' . $order_id;
-		$invoice_request->amount = (float) $order_info['total'];
+		$invoice_request->amount = (float)$order_info['total'];
 		$invoice_request->userPhone = $order_info['phone'];
 		$invoice_request->userEmail = $order_info['email'];
 		$invoice_request->deathDate = '';
 		$invoice_request->description = '';
-		$invoice_request->serviceType = 9;
+		$invoice_request->serviceType = 4;
 		$invoice_data = $client->createInvoice($invoice_request);
+		db_query("INSERT INTO `wooppay_order_transaction` SET
+			`order_id` = '" . (int)$order_id . "',
+			`wooppay_transaction_id` = '" . $invoice_data->response->operationId . "'");
 		fn_create_payment_form($invoice_data->response->operationUrl, array(), 'Wooppay', true, 'GET');
 	}
 }
+
+
 

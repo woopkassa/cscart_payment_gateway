@@ -16,7 +16,7 @@ if (!defined('BOOTSTRAP')) { die('Access denied'); }
 
 function fn_rus_wooppay_install()
 {
-	fn_rus_alfabank_uninstall();
+	fn_rus_wooppay_uninstall();
 
 	$_data = array(
 		'processor' => 'Wooppay',
@@ -29,10 +29,18 @@ function fn_rus_wooppay_install()
 	);
 
 	db_query("INSERT INTO ?:payment_processors ?e", $_data);
+	db_query("
+			CREATE TABLE IF NOT EXISTS `wooppay_order_transaction` (
+			  `id` int(11) NOT NULL AUTO_INCREMENT,
+			  `order_id` int(11) NOT NULL,
+			  `wooppay_transaction_id`  CHAR(20) NOT NULL,
+			  PRIMARY KEY (`id`)
+			) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;");
 }
 
 function fn_rus_wooppay_uninstall()
 {
 	db_query("DELETE FROM ?:payment_processors WHERE processor_script = ?s", "wooppay.php");
+	db_query("DROP TABLE IF EXISTS `wooppay_order_transaction`;");
 }
 
