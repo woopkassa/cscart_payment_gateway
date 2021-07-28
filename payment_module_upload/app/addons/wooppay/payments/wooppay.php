@@ -90,7 +90,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
 		$invoice_request->userEmail = $order_info['email'];
 		$invoice_request->deathDate = '';
 		$invoice_request->description = '';
-		if (!isset($order_info['phone'])) {
+		if (isset($order_info['phone'])) {
 			$invoice_request->serviceType = 4;
 		} else {
 			$invoice_request->serviceType = 0;
