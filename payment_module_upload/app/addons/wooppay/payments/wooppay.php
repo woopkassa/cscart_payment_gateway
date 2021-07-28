@@ -90,7 +90,11 @@ if (defined('PAYMENT_NOTIFICATION')) {
 		$invoice_request->userEmail = $order_info['email'];
 		$invoice_request->deathDate = '';
 		$invoice_request->description = '';
-		$invoice_request->serviceType = 4;
+		if (!isset($order_info['phone'])) {
+			$invoice_request->serviceType = 4;
+		} else {
+			$invoice_request->serviceType = 0;
+		}
 		$invoice_data = $client->createInvoice($invoice_request);
 		db_query("INSERT INTO `wooppay_order_transaction` SET
 			`order_id` = '" . (int)$order_id . "',
