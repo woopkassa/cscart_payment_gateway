@@ -49,7 +49,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
 						$operationdata_request = new CashGetOperationDataRequest();
 						$operationdata_request->operationId = array($operation_id[0]);
 						$operation_data = $client->getOperationData($operationdata_request);
-						if ($operation_data->response->records[0]->status == WooppayOperationStatus::OPERATION_STATUS_DONE) {
+						if ($operation_data->response->records[0]->status == WooppayOperationStatus::OPERATION_STATUS_DONE || $operation_data->response->records[0]->status == WooppayOperationStatus::OPERATION_STATUS_WAITING) {
 							$pp_response = array(
 								'order_status' => 'P'
 							);
